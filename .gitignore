@@ -1,0 +1,9 @@
+node_modules/
+*.json.key
+sa.json
+.env
+shared-app-source/
+research/*
+!research/live-check.mjs
+*.env
+secrets/

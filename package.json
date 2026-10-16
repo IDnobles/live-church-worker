@@ -1,0 +1,16 @@
+{
+  "name": "live-church-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cron worker: YouTube live auto-detect + OneSignal live alerts for C&S Mobile, CAC Archive, CAC Social",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/index.js",
+    "dry-run": "DRY_RUN=1 node src/index.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
