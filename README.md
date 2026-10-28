@@ -13,8 +13,8 @@ OneSignal live alerts to C&S Mobile, CAC Archive and CAC Social. Firestore: `csh
 ## Secrets (repo → Settings → Secrets → Actions)
 `YOUTUBE_API_KEY`, `FIREBASE_SERVICE_ACCOUNT` (JSON for cshymnsapp), `ONESIGNAL_CSM_APP_ID`,
 `ONESIGNAL_CSM_REST_KEY`, `ONESIGNAL_CACA_APP_ID`, `ONESIGNAL_CACA_REST_KEY`,
-`ONESIGNAL_CACS_APP_ID`, `ONESIGNAL_CACS_REST_KEY`. Optional `ONESIGNAL_SEGMENT`
-(default `Total Subscriptions`).
+`ONESIGNAL_CACS_APP_ID`, `ONESIGNAL_CACS_REST_KEY`. Optional `ONESIGNAL_SEGMENT` or per-app `ONESIGNAL_<APP>_SEGMENT`
+(defaults: CSM `Total Subscriptions`, CACA/CACS `Subscribed Users`).
 
 Public repo = unlimited free Actions minutes (private: 2,000 min/mo, ~4,300 needed at 10-min cadence → use public, or 20-min cron).
 

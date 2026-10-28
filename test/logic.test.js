@@ -92,3 +92,28 @@ test('24/7 loop streams are ignored', async () => {
   const { live } = await detectYouTubeLive(['UCa'], { key: '', fetchImpl: fakeFetch({ '/channel/UCa/live': page(pr) }), delayMs: 0 });
   assert.equal(live.size, 0);
 });
+
+import { oneSignalResult, segmentFor } from '../src/logic.js';
+
+test('oneSignalResult: 200 with empty id + errors is a failure', () => {
+  const r = oneSignalResult(200, { id: '', errors: ['All included players are not subscribed'], warnings: ['Mobile push delivery was suppressed because your organization is over its free monthly active users limit.'] });
+  assert.equal(r.ok, false);
+  assert.match(r.text, /^err 200 All included players/);
+  assert.match(r.text, /monthly active users/);
+});
+
+test('oneSignalResult: real id is ok; warnings surfaced', () => {
+  assert.equal(oneSignalResult(200, { id: 'abc' }).text, 'ok');
+  const w = oneSignalResult(200, { id: 'abc', warnings: ['something'] });
+  assert.equal(w.ok, true);
+  assert.match(w.text, /warn: something/);
+  assert.equal(oneSignalResult(400, { errors: ['bad'] }).ok, false);
+});
+
+test('segmentFor: per-app defaults and overrides', () => {
+  assert.equal(segmentFor('CSM', {}), 'Total Subscriptions');
+  assert.equal(segmentFor('CACA', {}), 'Subscribed Users');
+  assert.equal(segmentFor('CACS', {}), 'Subscribed Users');
+  assert.equal(segmentFor('CACA', { ONESIGNAL_SEGMENT: 'X' }), 'X');
+  assert.equal(segmentFor('CACA', { ONESIGNAL_SEGMENT: 'X', ONESIGNAL_CACA_SEGMENT: 'Y' }), 'Y');
+});

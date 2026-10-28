@@ -5,15 +5,15 @@
 // Env (secrets only, never committed): YOUTUBE_API_KEY, FIREBASE_SERVICE_ACCOUNT (JSON),
 // ONESIGNAL_{CSM,CACA,CACS}_APP_ID + ONESIGNAL_{CSM,CACA,CACS}_REST_KEY. DRY_RUN=1 = no writes/pushes.
 import admin from 'firebase-admin';
-import { buildMessage, ms, shouldAlert } from './logic.js';
+import { buildMessage, ms, oneSignalResult, segmentFor, shouldAlert } from './logic.js';
 import { detectYouTubeLive } from './youtube.js';
 
 const DRY = process.env.DRY_RUN === '1';
-const SEGMENT = process.env.ONESIGNAL_SEGMENT || 'Total Subscriptions';
 const APPS = ['CSM', 'CACA', 'CACS'].map((k) => ({
   key: k,
   appId: process.env[`ONESIGNAL_${k}_APP_ID`],
   restKey: process.env[`ONESIGNAL_${k}_REST_KEY`],
+  segment: segmentFor(k, process.env),
 })).filter((a) => a.appId && a.restKey);
 
 const log = (...a) => console.log(new Date().toISOString(), ...a);
@@ -33,7 +33,7 @@ async function pushAll(church) {
   for (const app of APPS) {
     const payload = {
       app_id: app.appId,
-      included_segments: [SEGMENT],
+      included_segments: [app.segment],
       headings: { en: title },
       contents: { en: body },
       data: { type: 'live_church', liveChurchId: church.id },
@@ -51,7 +51,7 @@ async function pushAll(church) {
         body: JSON.stringify(payload),
       });
       const j = await r.json().catch(() => ({}));
-      results.push(`${app.key}:${r.ok ? 'ok' : `err ${r.status} ${JSON.stringify(j.errors || j).slice(0, 120)}`}`);
+      results.push(`${app.key}:${oneSignalResult(r.status, j).text}`);
     } catch (e) { results.push(`${app.key}:err ${e.message}`); }
   }
   return results;

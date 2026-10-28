@@ -53,6 +53,27 @@ export function shouldAlert(church, cfg, now) {
   return { send: false, reason: 'interval-wait' };
 }
 
+// OneSignal segment names differ by app age: newer apps have "Total Subscriptions",
+// older apps (CAC Archive, CAC Social) only have "Subscribed Users".
+export const DEFAULT_SEGMENTS = { CSM: 'Total Subscriptions', CACA: 'Subscribed Users', CACS: 'Subscribed Users' };
+export function segmentFor(key, env = {}) {
+  return env[`ONESIGNAL_${key}_SEGMENT`] || env.ONESIGNAL_SEGMENT || DEFAULT_SEGMENTS[key] || 'Total Subscriptions';
+}
+
+/**
+ * Interpret a OneSignal create-notification response. OneSignal answers HTTP 200 even when
+ * nothing is sent (e.g. {"id":"","errors":["All included players are not subscribed"]}) and
+ * reports delivery suppression only in "warnings", so r.ok alone is not success.
+ */
+export function oneSignalResult(status, body) {
+  const j = body || {};
+  const errs = Array.isArray(j.errors) ? j.errors : (j.errors ? [JSON.stringify(j.errors)] : []);
+  const warns = Array.isArray(j.warnings) ? j.warnings : (j.warnings ? [String(j.warnings)] : []);
+  const ok = status >= 200 && status < 300 && !!j.id && errs.length === 0;
+  const detail = [...errs, ...warns].join(' | ').slice(0, 200);
+  return { ok, id: j.id || '', detail, text: ok ? (warns.length ? `ok(warn: ${detail})` : 'ok') : `err ${status} ${detail || 'no notification id'}` };
+}
+
 export function parseRssVideoIds(xml, max = 5) {
   const ids = [];
   const re = /<yt:videoId>([\w-]{6,})<\/yt:videoId>/g;
